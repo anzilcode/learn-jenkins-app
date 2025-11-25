@@ -19,7 +19,8 @@ pipeline {
                 '''
             }
         }
-        stage('Test'){
+
+        stage('Test') {
             agent {
                 docker {
                     image 'node:18-alpine'
@@ -30,7 +31,6 @@ pipeline {
                 sh '''
                     test -f build/index.html
                     npm test
-                    cp -r test-results/ ../test-results/
                 '''
             }
         }
@@ -38,7 +38,7 @@ pipeline {
 
     post {
         always {
-            junit 'test-result/junit.xml'
+            junit 'test-results/junit.xml'
         }
     }
 }
