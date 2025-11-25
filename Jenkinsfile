@@ -30,6 +30,7 @@ pipeline {
                 sh '''
                     test -f build/index.html
                     npm test
+                    cp -r test-results/ ../test-results/
                 '''
             }
         }
