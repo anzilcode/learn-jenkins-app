@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     stages {
+
         stage('Build') {
             agent {
                 docker {
@@ -44,10 +45,23 @@ pipeline {
             }
             steps {
                 sh '''
+                    # install serve
                     npm install serve
+
+                    # start server
                     node_modules/.bin/serve -s build &
+                    SERVER_PID=$!
+
                     sleep 10
-                    npx playwright test
+
+                    # run E2E with junit reporter
+                    npx playwright test --reporter=junit
+
+                    # ensure workspace has test results
+                    mkdir -p ${WORKSPACE}/test-results
+                    cp -r test-results/* ${WORKSPACE}/test-results/
+
+                    kill $SERVER_PID
                 '''
             }
         }
@@ -55,7 +69,8 @@ pipeline {
 
     post {
         always {
-            junit 'test-results/junit.xml'
+            junit 'test-results/**/*.xml'
         }
     }
 }
+
