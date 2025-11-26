@@ -45,21 +45,18 @@ pipeline {
             }
             steps {
                 sh '''
-                    # install serve
                     npm install serve
-
-                    # start server
                     node_modules/.bin/serve -s build &
                     SERVER_PID=$!
 
                     sleep 10
 
-                    # run E2E with junit reporter
+                    # Generate JUnit XML
                     npx playwright test --reporter=junit
 
-                    # ensure workspace has test results
-                    mkdir -p ${WORKSPACE}/test-results
-                    cp -r test-results/* ${WORKSPACE}/test-results/
+                    # Copy results into Jenkins workspace using PWD (not WORKSPACE)
+                    mkdir -p $PWD/test-results-jenkins
+                    cp -r test-results/* $PWD/test-results-jenkins/
 
                     kill $SERVER_PID
                 '''
@@ -69,8 +66,7 @@ pipeline {
 
     post {
         always {
-            junit 'test-results/**/*.xml'
+            junit 'test-results-jenkins/**/*.xml'
         }
     }
 }
-
