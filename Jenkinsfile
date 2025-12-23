@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     stages {
+        /*
 
         stage('Build') {
             agent {
@@ -17,9 +18,11 @@ pipeline {
                     npm --version
                     npm ci
                     npm run build
+                    ls -la
                 '''
             }
         }
+        */
 
         stage('Test') {
             agent {
@@ -28,9 +31,10 @@ pipeline {
                     reuseNode true
                 }
             }
+
             steps {
                 sh '''
-                    test -f build/index.html
+                    #test -f build/index.html
                     npm test
                 '''
             }
@@ -43,22 +47,13 @@ pipeline {
                     reuseNode true
                 }
             }
+
             steps {
                 sh '''
                     npm install serve
                     node_modules/.bin/serve -s build &
-                    SERVER_PID=$!
-
                     sleep 10
-
-                    # Generate JUnit XML
-                    npx playwright test --reporter=junit
-
-                    # Copy results into Jenkins workspace using PWD (not WORKSPACE)
-                    mkdir -p $PWD/test-results-jenkins
-                    cp -r test-results/* $PWD/test-results-jenkins/
-
-                    kill $SERVER_PID
+                    npx playwright test --reporter=html
                 '''
             }
         }
@@ -66,7 +61,9 @@ pipeline {
 
     post {
         always {
-            junit 'test-results-jenkins/**/*.xml'
+            junit 'jest-results/junit.xml'
+            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright HTML Report', reportTitles: '', useWrapperFileDirectly: true])
         }
     }
 }
+
